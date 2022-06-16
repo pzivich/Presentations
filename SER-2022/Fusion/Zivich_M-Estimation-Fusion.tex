@@ -59,7 +59,7 @@ shorten >= 3pt, preaction = {decorate}
 \begin{frame}{Acknowledgements}
 	Supported by NIH T32-AI007001.\\~\\~\\
 	
-	Thanks to Stephen Cole, Jessie Edwards, Bonnie Shook-Sa, and others at the UNC Causal Lab (causal.unc.edu).\footnote[frame]{Footnotes are reserved asides for possible later discussion or questions}\\~\\~\\~\\
+	Thanks to Stephen Cole, Jessie Edwards, Bonnie Shook-Sa, Alex Breskin, and others at the UNC Causal Lab (causal.unc.edu).\footnote[frame]{Footnotes are reserved asides for possible later discussion or questions}\\~\\~\\~\\
 	\begin{center}
 		\faEnvelope \quad pzivich@unc.edu \qquad
 		\faTwitter \quad @PausalZ \qquad
@@ -87,7 +87,7 @@ shorten >= 3pt, preaction = {decorate}
 \begin{frame}{Stacked functions}
 	Example: inverse probability of missingness weighted mean
 	\begin{itemize}
-		\item MNAR conditional on $W$ 
+		\item MCAR conditional on $W$ 
 	\end{itemize}
 	\[\psi(O_i, \theta) = 
 	\begin{bmatrix}
@@ -151,18 +151,20 @@ shorten >= 3pt, preaction = {decorate}
 	where $O_i = (S_i, W_i, Y_i, Y_i^*)$ and $\theta = (\green{\alpha_1}, \green{\alpha_0}, \violet{\beta}, \blue{\omega}, \mu)$
 \end{frame}
 
-\begin{frame}{A2: transport and measurement error\footnote[frame]{Details and  code available at github.com/pzivich/Presentations}\textsuperscript{,}\footnote[frame]{Based on 2000 repetitions with $n_1=750$, $n_2=200$, $n_3=2000$, and $\mu=0.42$}}
+\begin{frame}{A2: transport and measurement error\footnote[frame]{Details and  code available at github.com/pzivich/Presentations}\textsuperscript{,}\footnote[frame]{2000 repetitions with $n_1=750$, $n_2=200$, $n_3=2000$, and $\mu=0.42$}}
 	\centering 
 	\includegraphics[scale=0.55]{images/sim_a2_results.png}
 \end{frame}
 
 \begin{frame}{A3: bridged study design}
-	Compared \blue{triple therapy} to \red{mono therapy} through \violet{dual therapy}\footnote[frame]{Breskin et al. (2021) \textit{Stats in Med}}
+	\blue{Triple therapy} to \red{mono therapy} through \violet{dual therapy}\footnote[frame]{Breskin et al. (2021) \textit{Stats in Med}}\textsuperscript{,}\footnote[frame]{Zivich et al. (2022) \textit{arXiv}}
 	\begin{itemize}
 		\item Using ACTG 320 and ACTG 175
 		\item Restricting by CD4 between 50-300 cells/mm\textsuperscript{3}
 	\end{itemize}~\\
-	\[\left(\blue{F_3(t)} - \violet{F_2(t)}\right) + \left(\violet{F_2(t)} - \red{F_1(t)}\right)\]
+	\begin{center}
+			\includegraphics[scale=0.25]{images/bridge_actg.png}
+	\end{center}
 \end{frame}
 
 \begin{frame}{A3: bridged study design}
