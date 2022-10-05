@@ -1,0 +1,843 @@
+\documentclass{beamer}
+\usetheme{Copenhagen}
+\usecolortheme{crane}
+\usefonttheme[onlymath]{serif}
+
+\usepackage{setspace}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{multimedia}
+\usepackage{fontawesome}
+\usepackage[most]{tcolorbox}
+\usepackage{empheq}
+\usepackage{fancybox}
+\usepackage{tikz}
+\usetikzlibrary{positioning, calc, shapes.geometric, shapes.multipart, 
+	shapes, arrows.meta, arrows, 
+	decorations.markings, external, trees}
+\tikzstyle{Arrow} = [
+thick, 
+decoration={
+	markings,
+	mark=at position 1 with {
+		\arrow[thick]{latex}
+	}
+}, 
+shorten >= 3pt, preaction = {decorate}
+]
+
+% defining separate box arguments for colors (couldn't get kwarg to work as expected)
+\newtcbox{\wbox}[1][]{%
+	nobeforeafter, math upper, tcbox raise base,
+	enhanced, colframe=blue!30!black,
+	colback=blue!0, boxrule=0.5pt, boxsep=0.05mm,
+	#1}
+
+\newtcbox{\bbox}[1][]{%
+	nobeforeafter, math upper, tcbox raise base,
+	enhanced, colframe=blue!30!black,
+	colback=blue!30, boxrule=0.5pt, boxsep=0.05mm,
+	#1}
+
+\newtcbox{\rbox}[1][]{%
+	nobeforeafter, math upper, tcbox raise base,
+	enhanced, colframe=blue!30!black,
+	colback=red!30, boxrule=0.5pt, boxsep=0.05mm,
+	#1}
+
+\newtcbox{\gbox}[1][]{%
+	nobeforeafter, math upper, tcbox raise base,
+	enhanced, colframe=blue!30!black,
+	colback=green!30, boxrule=0.5pt, boxsep=0.05mm,
+	#1}
+
+\newtcbox{\ybox}[1][]{%
+	nobeforeafter, math upper, tcbox raise base,
+	enhanced, colframe=blue!30!black,
+	colback=yellow!50, boxrule=0.5pt, boxsep=0.05mm,
+	#1}
+
+\newtcbox{\violetbox}[1][]{%
+	nobeforeafter, math upper, tcbox raise base,
+	enhanced, colframe=blue!30!black,
+	colback=violet!30, boxrule=0.5pt, boxsep=0.05mm,
+	#1}
+
+\newcommand{\blue}[1]{\textcolor{blue}{#1}}
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+\newcommand{\violet}[1]{\textcolor{violet}{#1}}
+
+\title[M-estimation]{M-estimation}
+\author[Paul Zivich]{Paul Zivich \\~\\ Institute of Global Health and Infectious Diseases \\ Causal Inference Research Laboratory \\ University of North Carolina at Chapel Hill}
+
+\setbeamercovered{transparent}
+\setbeamertemplate{navigation symbols}{}  % gets rid of the dumb navigation symbols
+\setbeamertemplate{page number in head/foot}{\insertframenumber}  % adds slide #
+\setbeamertemplate{headline}{}
+
+\AtBeginSection[]{
+	\begin{frame}
+		\vfill
+		\centering
+		\begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+			\usebeamerfont{title}\insertsectionhead\par%
+		\end{beamercolorbox}
+		\vfill
+	\end{frame}
+}
+
+\begin{document}
+\begin{frame}[plain]
+    \maketitle
+\end{frame}
+
+\begin{frame}{Acknowledgements}
+	Supported by NIH T32-AI007001.\\~\\~\\
+	
+	Thanks to Bonnie Shook-Sa, Stephen Cole, Jessie Edwards, and others at the UNC Causal Lab (causal.unc.edu).\footnote[frame]{Footnotes are reserved asides for possible discussion or questions}\\~\\~\\~\\
+	
+	\faEnvelope \quad pzivich@unc.edu \qquad
+	\faTwitter \quad @PausalZ \qquad
+	\faGithub \quad pzivich\\
+\end{frame}
+
+\begin{frame}{Overview}
+	Introduce M-estimation\\~\\
+	Computational M-estimation\\~\\
+	Applications\\~\\
+	Conclusion
+\end{frame}
+
+\section{Introduction to M-estimation}
+
+\begin{frame}{M-estimation: a short history}
+	\begin{itemize}
+		\item M(aximum likelihood)-estimation
+		\begin{itemize}
+			\item More general framework\footnote[frame]{Stefanski LA \& Boos DD (2002) \textit{The American Statistician}, 56(1), 29-38.}
+			\item Defined as a zero of an estimating function
+		\end{itemize}
+		\item Developed to study robust statistics\footnote[frame]{Huber PJ (1964) \textit{Annals of Mathematical Statistics}, 35, 73–101.}\textsuperscript{,}\footnote[frame]{Huber PJ (1973) \textit{Annals of Statistics}, 1, 799–821.}
+		\begin{itemize}
+			\item Mean robust to outliers
+		\end{itemize}
+		\item Operate under frequentist superpopulation model
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{M-estimation: the basics}
+	M-estimator: solution for $\theta$ in
+	\[ \sum_{i=1}^{n} \psi(O_i; \hat{\theta}) = 0 \]
+	where 
+	\begin{itemize}
+		\item $O_1, O_2, ..., O_n$ are independent observations
+		\item $\theta = (\theta_1, ..., \theta_k)$
+		\item $\psi(.)$ is a known $k\times1$ estimating function
+		\begin{itemize}
+			\item Does not depend on $i$
+			\item Proof of CAN follows from unbiased estimating functions\footnote[frame]{See pages 327-329 of `Essential Statistical Inference' by Boos \& Stefanski}
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{By-hand example}
+	Task: estimate the mean ($\mu$) of $\{1,5,3,7,24\}$
+	\\~\\
+	Using $\hat{\mu} = n^{-1} \sum_{i=1}^{n} Y_i$
+	\\~\\
+	$$\hat{\mu} = \frac{1+5+3+7+24}{5} = \frac{40}{5} = 8$$
+	~\\
+	The equivalent estimating function is
+	$$\sum_{i=1}^{n} (Y_i - \hat{\mu}) = 0$$
+\end{frame}
+
+\begin{frame}{By-hand example}
+	To find $\hat{\mu}$, we use a root-finding algorithm\footnote[frame]{This procedure is a simple example of the bisection algorithm.}
+	\begin{itemize}
+		\item Select a grid of values
+		\begin{itemize}
+			\item $0, 5, ..., 25$
+		\end{itemize}
+		\item Plug in guess for $\hat{\mu}$ into $\sum_{i=1}^{n} (Y_i - \hat{\mu})$
+		\item Select values that straddle zero
+		\begin{itemize}
+			\item $5, 10$
+		\end{itemize}
+		\item Select new grid and repeat process
+		\begin{itemize}
+			\item $5, 6, 7, 8, 9, 10$
+		\end{itemize}
+		\item Terminate procedure when $\hat{\mu}$ that returns zero is found
+	\end{itemize}~\\
+	End up with $\hat{\mu} = 8$
+\end{frame}
+
+\begin{frame}{M-estimation: the basics}
+	Asymptotic sandwich variance
+	\[ V(\theta) = B(\theta)^{-1} F(\theta)\left(B(\theta)^{-1}\right)^T\]
+	Empirical sandwich variance estimator
+	\[ V_n(O_i; \hat{\theta}) = B_n(O_i; \hat{\theta})^{-1} F_n(O_i; \hat{\theta})
+	\left(B_n(O_i; \hat{\theta})^{-1}\right)^T\]
+	where
+	\[B_n(O_i; \hat{\theta}) = n^{-1} \sum_{i=1}^{n} - \psi'(O_i; \hat{\theta})\]
+	\[F_n(O_i; \hat{\theta}) = n^{-1} \sum_{i=1}^{n} \psi(O_i; \hat{\theta}) \psi(O_i; \hat{\theta})^T\]
+\end{frame}
+
+\begin{frame}{Connections to maximum likelihood estimation}
+	When the correct parametric family is assumed
+	\[B(\theta) = F(\theta) = I(\theta)\]
+	Therefore
+	\[V(\theta) = I(\theta)^{-1}\]
+	~\\
+	When the parametric family is incorrect
+	\[B(\theta) \ne F(\theta)\]
+	and the correct limiting variance is $V(\theta)$
+\end{frame}
+
+\begin{frame}{Advantages of the sandwich estimator}
+	Key advantages
+	\begin{itemize}
+		\item Robust to secondary assumptions
+		\item Automation of the delta method
+		\item Captures uncertainty of parameters that depend on other estimated parameters
+		\item Less computationally intensive
+		\begin{itemize}
+			\item Relative to bootstrap, Monte Carlo
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{By-hand example}
+	Bread matrix
+	\[B_n(Y_i; \hat{\mu}) = 5^{-1} \sum_{i=1}^{5} - \psi'(Y_i; \hat{\mu})\]
+	Here
+	\[\psi'(Y_i; \hat{\mu}) = \frac{d}{d\hat{\mu}}\left(Y_i - \hat{\mu}\right) = -1\]
+	~\\
+	Therefore
+	\[B_n(Y_i; \hat{\mu}) = 5^{-1} \sum_{i=1}^{5} -(-1) = \frac{5}{5} = 1\]
+\end{frame}
+
+\begin{frame}{By-hand example}
+	Filling matrix
+	\[F_n(Y_i; \hat{\mu}) = 5^{-1} \sum_{i=1}^{5} \psi(Y_i; \hat{\mu}) \psi(Y_i; \hat{\mu})^T\]
+	Here
+	\[\psi(Y_i; \hat{\mu}) \psi(Y_i; \hat{\mu})^T = (Y_i - \hat{\mu})(Y_i - \hat{\mu}) = (Y_i - \hat{\mu})^2\]
+	~\\
+	Therefore
+	\[F_n(Y_i; \hat{\mu}) = 5^{-1} \sum_{i=1}^{5} (Y_i - 8)^2 = 68\]
+\end{frame}
+
+\begin{frame}{By-hand example}
+	Sandwich matrix
+	\[ V_n(O_i; \hat{\theta}) = B_n(O_i; \hat{\theta})^{-1} F_n(O_i; \hat{\theta})
+	\left(B_n(O_i; \hat{\theta})^{-1}\right)^T\]
+	\[ V_n(O_i; \hat{\theta}) = 1^{-1} \times 68 \times 1^{-1} = 68\]
+	Scale by $n$ for finite-sample variance estimate
+	\[ n^{-1} V_n(O_i; \hat{\theta}) = 68 / 5 = 13.6\]	
+\end{frame}
+
+\section{Computational M-estimation}
+
+\begin{frame}{Implementation of M-estimators}
+	Solving 'by-hand' has issues
+	\begin{itemize}
+		\item More than one parameter
+		\item May introduce math errors
+	\end{itemize}~\\
+	However, can all be done by the computer\\~\\
+	Procedure
+	\begin{itemize}
+		\item Root-finding procedure for $\hat{\theta}$
+		\item Numerically approximate derivatives in $B_n(O_i; \hat{\theta})$
+		\item Matrix algebra for sandwich
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Software\footnote[frame]{\texttt{delicatessen}: Zivich et al. \textit{arXiv}:2203.11300, \texttt{geex}: Saul \& Hudgens (2020) \textit{J Stat Soft}}}
+	\centering
+	\includegraphics[width=1.0\linewidth]{images/software.png}
+\end{frame}
+
+\begin{frame}{Root-finding}
+	\centering
+	\includegraphics[width=1.0\linewidth]{images/rootfinding.png}
+\end{frame}
+
+\begin{frame}{Numerical approximation of derivative}
+	\centering
+	\includegraphics[width=1.0\linewidth]{images/derivative1.png}
+\end{frame}
+
+\begin{frame}{Numerical approximation of derivative}
+	\centering
+	\includegraphics[width=1.0\linewidth]{images/derivative2.png}
+\end{frame}
+
+\section{Application of M-estimators}
+
+\begin{frame}{Outline}
+	Robust mean \\
+	Regression
+	\begin{itemize}
+		\item Simple
+		\item Robust
+	\end{itemize}
+	Causal estimation methods
+	\begin{itemize}
+		\item Inverse probability weighting
+		\item G-computation
+	\end{itemize}
+	Fusion designs
+	\begin{itemize}
+		\item Bridged treatment comparisons
+	\end{itemize}	
+\end{frame}
+
+\section{Robust Mean}
+
+\begin{frame}{Problem with the mean}
+	Sensitivity to outliers
+	\begin{itemize}
+		\item For $\{1,5,3,7,24\}$
+		\item Observation of $24$ has large impact on $\hat{\mu}$
+		\item Mean ($\hat{\mu}=8$) is larger than the other 4 observations
+	\end{itemize}~\\
+	Robust mean\footnote[frame]{Mean and median are special cases where $k\rightarrow\infty$ and $k\rightarrow0$, respectively}
+	\[\sum_{i=1}^{n} f_k(Y_i - \bar{\mu}) = 0\]
+	\[f_k(x)= 
+	\begin{cases}
+		x, & \text{if } -k < x < k \\
+		k, & \text{if } x \ge k \\
+		-k, & \text{if } x \le -k \\
+	\end{cases}\]
+\end{frame}
+
+\begin{frame}{Robust Mean}
+	With $k=4$
+	\begin{center}
+		\setstretch{0.1}
+		\includegraphics[width=0.5\linewidth]{images/sandwich_top3.png}
+		\begin{empheq}[box=\wbox]{equation*}
+			f_4(Y_i - \bar{\mu})
+		\end{empheq}
+		\includegraphics[width=0.5\linewidth]{images/sandwich_bottom3.png}
+	\end{center}~\\
+	$\bar{\mu} = 5$ and $\bar{Var}(\bar{\mu}) = 3.3$
+\end{frame}
+
+\section{Regression}
+
+\begin{frame}{Notation}
+	$Y_i$: independent variable\\
+	$X_i$: dependent variable\\~\\
+	$g(X_i) = (1, X_i)$\\
+	$\beta = (\beta_0, \beta_1)$
+\end{frame}
+
+\begin{frame}{Example}
+	\begin{center}
+		\includegraphics[width=0.90\linewidth]{images/regression1.png}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Simple Linear Regression}
+	\begin{center}
+		\setstretch{0.1}
+		\includegraphics[width=0.52\linewidth]{images/sandwich_top6.png}
+		\begin{empheq}[box=\wbox]{equation*}
+			\left( Y_i - g(X_i)^T \hat{\beta} \right) 1
+		\end{empheq}
+		\begin{empheq}[box=\wbox]{equation*}
+			\left( Y_i - g(X_i)^T \hat{\beta} \right) X_i
+		\end{empheq}
+		\includegraphics[width=0.5\linewidth]{images/sandwich_bottom6.png}
+	\end{center}
+	~\\ Notice: the estimating function is the score equation
+	\begin{itemize}
+		\item Easy to develop as M-estimators
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Simple Linear Regression}
+	\begin{center}
+		\includegraphics[width=0.90\linewidth]{images/regression2.png}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Robust Linear Regression}
+	\begin{center}
+		\setstretch{0.1}
+		\includegraphics[width=0.5\linewidth]{images/sandwich_top4.png}
+		\begin{empheq}[box=\wbox]{equation*}
+			f_k\left( Y_i - g(X_i)^T \bar{\beta} \right) 1
+		\end{empheq}
+		\begin{empheq}[box=\wbox]{equation*}
+			f_k\left( Y_i - g(X_i)^T \bar{\beta} \right) X_i
+		\end{empheq}
+		\includegraphics[width=0.5\linewidth]{images/sandwich_bottom4.png}
+	\end{center}
+	~\\ Outliers can only impact up to $k$
+\end{frame}
+
+\begin{frame}{Robust Linear Regression}
+	\begin{center}
+		\includegraphics[width=0.90\linewidth]{images/regression3.png}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Other regression models}
+	Penalized regression\footnote[frame]{Fu WJ. (2003) \textit{Biometrics}, 59, 126-132}
+	\begin{itemize}
+		\item Ridge or $L_2$ penalty
+	\end{itemize}~\\
+	\begin{center}
+		\setstretch{0.1}
+		\includegraphics[width=0.55\linewidth]{images/sandwich_top1.png}
+		\begin{empheq}[box=\wbox]{equation*}
+			(Y_i - g(X_i)^T \hat{\beta})g(X_i) - \frac{\lambda}{n} \hat{\beta}
+		\end{empheq}
+		\includegraphics[width=0.55\linewidth]{images/sandwich_bottom3.png}~\\~\\
+	\end{center}
+\end{frame}
+
+\begin{frame}{Other regression models}
+	Dose-response regression\footnote[frame]{An H et al. (2019) \textit{R Journal}, 11(2), 171.}
+	\begin{itemize}
+		\item 3-parameter log-logistic models\footnote[frame]{Example provided in Zivich et al. \textit{arXiv}:2203.11300}
+	\end{itemize}
+	\begin{center}
+		\includegraphics[width=0.75\linewidth]{images/dose_response.png}
+	\end{center}
+\end{frame}
+
+\section{Causal Effect Estimation}
+
+\begin{frame}{Notation}
+	$Y_i$: outcome of interest\\
+	$A_i$: action of interest\\
+	$Y_i^a$: potential outcome under action $a$\\
+	$W_i$: vector of covariates\\~\\
+	$g(W_i) = (1, W_i)$ \\
+	$g(A_i, W_i) = (1, A_i, W_i)$ \\~\\
+\end{frame}
+
+\begin{frame}{Aside: Identification vs Estimation}
+	Following all relies on identification assumptions: causal consistency, exchangeability, positivity\footnote[frame]{Identification should always precede estimation (see Maclaren OJ \& Nicholson R (2019) \textit{arXiv:1904.02826}, Aronow PM et al. (2021) \textit{arXiv:2108.11342} for why)}
+	\begin{itemize}
+		\item Identification: writing interest parameter in terms of observable data
+		\item Estimation: how the parameter in terms of observable data is estimated
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Aside: Nuisance Parameters}
+	Causal inference (and related) problems can be set up as
+	\[\theta = (\mu, \eta)\]
+	$\mu$ is the \textit{interest} parameter \\
+	$\eta$ is the \textit{nuisance} parameter
+	\\~\\
+	\begin{itemize}
+		\item To estimate $\mu$, need to estimate $\eta$
+		\item But $\eta$ is not of any immediate interest
+		\item Example: causal mean and propensity scores
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Motivating Example}
+	Example from Morris et al. (2022)\footnote[frame]{Morris TP et al. (2022) \textit{Trials} 23(1), 1-17.}
+	\begin{itemize}
+		\item Comparison of covariate adjustment methods
+		\begin{itemize}
+			\item Gain power in randomized trials
+			\item Account for systematic error in observational studies
+		\end{itemize}~\\
+		\item Data from the \textit{GetTested} trial\footnote[frame]{Wilson E et al. (2017) \textit{PLOS Medicine} 14(12), e1002479}
+		\begin{itemize}
+			\item Efficacy of e-STI testing on STI testing uptake
+			\item $W_i$: gender, age, number of sexual partners, sexual orientation, ethnicity
+			\item Will ignore missing data here\footnote[frame]{Don't do this. Will be a later slide on extending the M-estimators}
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Inverse Probability Weighting}
+	The IPW estimator is 
+	\[\frac{1}{n} \sum_i^n \frac{Y_i A_i}{\Pr(A=1 | W_i ; \hat{\alpha})} - \frac{1}{n} \sum_i^n \frac{Y_i (1-A_i)}{\Pr(A=0 | W_i ; \hat{\alpha})}\]
+	Estimate $\hat{\alpha}$ using a logistic model, $\eta = \alpha$
+	\\~\\
+	Estimating the variance for the RD
+	\begin{itemize}
+		\item Bootstrap
+		\begin{itemize}
+			\item Computationally expensive
+		\end{itemize}
+		\item The "GEE trick"
+		\begin{itemize}
+			\item Treats $\hat{\alpha}$ as known
+			\item Conservative estimate of the variance\footnote[frame]{Only true for some parameters, see Reifeis \& Hudgens (2022) \textit{Am J Epidemiol} for an exception}
+		\end{itemize}
+		\item Sandwich
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Inverse Probability Weighting}
+	\begin{center}
+		\setstretch{0.1}
+		\includegraphics[width=0.6\linewidth]{images/sandwich_top1.png}
+		\begin{empheq}[box=\bbox]{equation*}
+			\left(A_i - \text{expit}(g(W_i)^T \hat{\alpha})\right) g(W_i)
+		\end{empheq}
+		\begin{empheq}[box=\wbox]{equation*}
+			\frac{Y_i A_i}{\text{expit}(g(W_i)^T \hat{\alpha})} - \hat{\mu}_1
+		\end{empheq}
+		\begin{empheq}[box=\wbox]{equation*}
+			\frac{Y_i (1-A_i)}{1-\text{expit}(g(W_i)^T \hat{\alpha})} - \hat{\mu}_0
+		\end{empheq}
+		\begin{empheq}[box=\wbox]{equation*}
+			(\hat{\mu}_1 - \hat{\mu}_0) - \hat{\mu}_2
+		\end{empheq}
+		\includegraphics[width=0.6\linewidth]{images/sandwich_bottom1.png}
+		\setstretch{1.0}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Inverse Probability Weighting}
+	\begin{center}
+		\setstretch{0.1}
+		\includegraphics[width=0.6\linewidth]{images/sandwich_top6.png}
+		\begin{empheq}[box=\wbox]{equation*}
+			\frac{Y_i A_i}{\text{expit}(g(W_i)^T \alpha)} - \hat{\mu}_1
+		\end{empheq}
+		\begin{empheq}[box=\wbox]{equation*}
+			\frac{Y_i (1-A_i)}{1-\text{expit}(g(W_i)^T \alpha)} - \hat{\mu}_0
+		\end{empheq}
+		\begin{empheq}[box=\wbox]{equation*}
+			(\hat{\mu}_1 - \hat{\mu}_0) - \hat{\mu}_2
+		\end{empheq}
+		\includegraphics[width=0.58\linewidth]{images/sandwich_bottom1.png}
+		\setstretch{1.0}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Results}
+	\begin{center}
+		\includegraphics[width=1.0\linewidth]{images/causal1.png}
+	\end{center}
+\end{frame}
+
+\begin{frame}{G-computation}
+	G-computation\footnote[frame]{See Snowden et al. (2011) \textit{Am J Epidemiol} for details on this 'trick'}
+	\[\frac{1}{n} \sum_{i=1}^n \left(E[Y_i | A_i=1, W_i; \hat{\beta}] -  E[Y_i | A_i=0, W_i; \hat{\beta}]\right)\]
+	Estimate $\hat{\beta}$ using a logistic model for binary $Y_i$, $\eta = \beta$
+	\\~\\
+	Estimating the variance for the RD
+	\begin{itemize}
+		\item Bootstrap
+		\item Sandwich
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{G-computation}
+	\begin{center}
+		\setstretch{0.1}
+		\includegraphics[width=0.75\linewidth]{images/sandwich_top2.png}
+		\begin{empheq}[box=\rbox]{equation*}
+			\left(Y_i - \text{expit}(g(A_i, W_i)^T \hat{\beta})\right) g(A_i, W_i)
+		\end{empheq}
+		\begin{empheq}[box=\wbox]{equation*}
+			\text{expit}(g(1, W_i)^T \hat{\beta}) - \hat{\mu}_1
+		\end{empheq}
+		\begin{empheq}[box=\wbox]{equation*}
+			\text{expit}(g(0, W_i)^T \hat{\beta}) - \hat{\mu}_0
+		\end{empheq}
+		\begin{empheq}[box=\wbox]{equation*}
+			(\hat{\mu}_1 - \hat{\mu}_0) - \hat{\mu}_2
+		\end{empheq}
+		\includegraphics[width=0.67\linewidth]{images/sandwich_bottom2.png}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Results}
+	\begin{center}
+		\includegraphics[width=1.0\linewidth]{images/causal2.png}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Missing Data}
+	Do not ignore
+	\begin{itemize}
+		\item If MCAR, may lose efficiency
+		\item If MAR, may be biased
+	\end{itemize}~\\
+	M-estimation makes extending the estimators simple\\~\\
+	$R_i$: observed $Y_i$ ($R_i = 1$) or missing $Y_i$ ($R_i = 0$)
+	\[\frac{1}{n} \sum_i^n \frac{Y_i R_i \; I(A_i=a)}{\Pr(A_i=a | W_i ; \hat{\alpha})\Pr(R_i=1 | A_i,W_i ; \hat{\gamma})}\]
+	$\eta = (\alpha, \gamma)$
+\end{frame}
+
+\begin{frame}{Inverse Probability Weighting with Missing $Y$}
+	\centering 
+	\begin{center}
+		\setstretch{0.1}
+		\includegraphics[width=0.6\linewidth]{images/sandwich_top6.png}
+		\begin{empheq}[box=\bbox]{equation*}
+			\left(A_i - \text{expit}(g(W_i)^T \hat{\alpha})\right) g(W_i)
+		\end{empheq}
+		\begin{empheq}[box=\violetbox]{equation*}
+			\left(R_i - \text{expit}(g(A_i,W_i)^T \hat{\gamma})\right) g(A_i,W_i)
+		\end{empheq}
+		\begin{empheq}[box=\wbox]{equation*}
+			\frac{Y_i A_i R_i}{\text{expit}(g(W_i)^T \hat{\alpha}) \; \text{expit}(g(A_i, W_i)^T \hat{\gamma})} - \hat{\mu}_1
+		\end{empheq}
+		\includegraphics[width=0.58\linewidth]{images/sandwich_bottom1.png}
+		\setstretch{1.0}
+	\end{center}~\\
+\end{frame}
+
+\begin{frame}{Results}
+	\begin{center}
+		\includegraphics[width=1.0\linewidth]{images/causal3.png}
+	\end{center}
+\end{frame}
+
+\section{Fusion Designs}
+
+\begin{frame}{What is a fusion design?}
+	Combine data across sources in a principled way to address a question none of the constituent data sets could address as well alone\footnote[frame]{See Cole et al. (2022) \textit{Am J Epidemiol} for examples}\\~\\
+	Examples
+	\begin{itemize}
+		\item Transporting the average causal effect
+		\item Measurement error corrections
+		\item Two-stage studies
+		\item Bridged treatment comparisons
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Notation}
+	$T_i$: time of event\\
+	$C_i$: time of censoring\\
+	$T^*_i = \min(T_i, C_i)$\\
+	$\Delta_i = I(T_i = T_i^*)$\\
+	$F(t)$: risk at time $t$\\~\\
+	$A_i$: action of interest, $\{1,2,3\}$\\
+	$W_i$: vector of covariates\\
+\end{frame}
+
+\begin{frame}{Bridged Treatment Comparisons}
+	Bridged treatment comparisons\footnote[frame]{See Breskin et al. (2021) \textit{Stats in Med} and Zivich et al. (2022) \textit{arXiv:2206.04445} for details on identification}
+	\begin{center}
+		\includegraphics[width=0.90\linewidth]{images/bridge.PNG}
+	\end{center}	
+	\begin{itemize}
+		\item Target population ($S_i=1$): $3$ vs $2$
+		\item Secondary population ($S_i=0$): $2$ vs $1$
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Motivating Example}
+	What is the one-year risk difference function comparing triple versus mono antiretroviral therapy (ART) on a composite outcome for the ACTG 320 trial?
+	\begin{itemize}
+		\item Outcome: AIDS, death, or a large decline in CD4 ($>$50\%)\\~\\
+		\item ACTG 320
+		\begin{itemize}
+			\item Randomized to triple ART ($a=3$) versus dual ART ($a=2$)
+		\end{itemize}~\\
+		\item ACTG 175
+		\begin{itemize}
+			\item Randomized to dual ART ($a=2$) versus mono ART ($a=1$)
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Bridged Treatment Comparisons}
+	Estimator
+	\[\hat{\mu}_t = \left(\hat{F}_{320}^{3}(t) - \hat{F}_{320}^{2}(t)\right) + \left(\hat{F}_{175}^{2}(t) - \hat{F}_{175}^{1}(t)\right)\]
+	Tasks
+	\begin{itemize}
+		\item Incorporate treatment assignment
+		\item Account for informative loss to follow-up
+		\item Transport ACTG 175 results to ACTG 320 population\footnote[frame]{Westreich et al. (2017) \textit{Am J Epidemiol}, 186(8), 1010-1014}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Bridged Treatment Comparisons}
+	Estimator for ACTG 320 pieces:
+	\[\hat{F}_{320}^{a}(t) = n_{320}^{-1} \sum_{i=1}^{n} \frac{I(A_i = a) I(S_i = 1) I(T_i^* \le t) \Delta_i}{\pi_A(S_i; \hat{\eta}) \pi_C(W_i, A_i, S_i; \hat{\eta})}\]~\\
+	where $a\in\{2,3\}$,
+	\[n_{320} = \sum_{i=1}^{n} I(S_i = 1)\]
+	\[\pi_A(S_i) = \Pr(A_i=a | S_i; \hat{\eta}) \]
+	\[\pi_C(W_i, A_i, S_i; \hat{\eta}) = \Pr(C_i>t | W_i, A_i, S_i; \hat{\eta})\]
+\end{frame}
+
+\begin{frame}{Bridged Treatment Comparisons}
+	Estimator for ACTG 175 pieces:
+	\[\hat{F}_{175}^{a}(t) = \hat{n}_{175}^{-1} \sum_{i=1}^{n} \frac{I(A_i = a) I(S_i = 1) I(T_i^* \le t) \Delta_i}{\pi_A(S_i;\hat{\eta}) \pi_C(W_i, A_i, S_i; \hat{\eta})} \times \frac{1 - \pi_S(W_i; \hat{\eta})}{\pi_S(W_i; \hat{\eta})}\]~\\
+	where $a\in\{1,2\}$
+	\[\hat{n}_{175} = \sum_{i=1}^{n} I(S_i = 0) \frac{1 - \pi_S(W_i; \hat{\eta})}{\pi_S(W_i; \hat{\eta})}\]
+	\[\pi_S(V_i; \hat{\eta}) = \Pr(S_i = 1 | W_i; \hat{\eta})\]
+\end{frame}
+
+\begin{frame}{Bridged Treatment Comparisons: Diagnostic}
+	Notice that\footnote[frame]{Zivich et al. (2022) \textit{arXiv:2206.04445} proposed this diagnostic and a permutation test for the whole risk difference curve}
+	\[E\left[\hat{F}_{320}^{2}(t) - \hat{F}_{175}^{2}(t)\right] = 0\]~\\
+	Offers a testable implication
+	\begin{itemize}
+		\item Compare difference in data
+		\item Difference from zero indicates $\ge1$ assumption is violated
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Bridged Treatment Comparisons}
+	\centering 
+	\setstretch{0.1}
+	\includegraphics[width=0.63\linewidth]{images/sandwich_top5.png}
+	\begin{empheq}[box=\bbox]{align*}
+		I(S_i=0)\left(I(A_i = 1) - \hat{\gamma}_{0,1} \right) \\
+		I(S_i=0)\left(I(A_i = 2) - \hat{\gamma}_{0,2} \right) \\
+		I(S_i=1)\left(I(A_i = 2) - \hat{\gamma}_{1,2} \right) \\
+		I(S_i=1)\left(I(A_i = 3) - \hat{\gamma}_{1,3} \right) \\
+	\end{empheq}
+	\begin{empheq}[box=\ybox]{equation*}
+		\left( I(S_i = 1) - \text{expit}(W_i^T \hat{\delta}) \right)W_i
+	\end{empheq}
+	\begin{empheq}[box=\gbox]{equation*}
+		\psi_{AFT}(O_i; \hat{\lambda}, \hat{\beta}, \hat{\alpha})
+	\end{empheq}
+	\begin{empheq}[box=\wbox]{equation*}
+		\psi_{RD(t)}(O_i; \hat{\mu}_t, \hat{\gamma}_{a,s}, \hat{\delta}, \hat{\lambda}, \hat{\beta}, \hat{\alpha})
+	\end{empheq}
+	\includegraphics[width=0.6\linewidth]{images/sandwich_bottom5.png}
+\end{frame}
+
+\begin{frame}{Bridged Treatment Comparisons\footnote[frame]{Results presented using twister plots (Zivich et al. (2021) \textit{Am J Epidemiol})}}
+	\centering 
+	\includegraphics[width=0.95\linewidth]{images/bridge_comparison.png}
+\end{frame}
+
+\section{Conclusions}
+
+\begin{frame}{Key Advantages}
+	Stacking estimating functions together
+	\begin{itemize}
+		\item Natural way to build an estimator
+		\item Connects to interest versus nuisance parameters
+		\item Sandwich variance
+		\begin{itemize}
+			\item Percolates uncertainty of nuisance parameters
+			\item Automation of the delta-method
+			\item Computationally efficient
+		\end{itemize}
+	\end{itemize}~\\
+	Existing estimators
+	\begin{itemize}
+		\item Many can be expressed as M-estimators
+		\item Score function
+	\end{itemize}~\\
+	Flexible software to implement M-estimators
+\end{frame}
+
+\begin{frame}{Limitations}
+	Valid estimating functions
+	\begin{itemize}
+		\item $\psi(O_i;\theta)$ must not depend on $i$
+		\begin{itemize}
+			\item Excludes models like Cox PH model
+		\end{itemize}
+		\item Non-smooth estimating functions
+		\begin{itemize}
+			\item Bread estimator may not be valid
+		\end{itemize} 
+	\end{itemize}~\\
+	Finite dimensional nuisance model
+	\begin{itemize}
+		\item Nuisance parameters assumed to be finite dimension
+		\item Unclear how (and if) data-adaptive algorithms could be used
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Further Reading}
+	Introductory papers
+	\begin{itemize}
+		\item Stefanski LA \& Boos DD. (2002). The calculus of M-estimation. \textit{The American Statistician}, 56(1), 29-38.
+		\item Cole SR, Edwards JK, Breskin A, et al. (2022). Illustration of Two Fusion Designs and Estimators. \textit{American Journal of Epidemiology}.
+		\item Jesus J \& Chandler RE. (2011). Estimating functions and the generalized method of moments. \textit{Interface Focus}, 1(6), 871-885.
+	\end{itemize}
+	Software
+	\begin{itemize}
+		\item deli.readthedocs.io
+		\item bsaul.github.io/geex/
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Thanks}
+	Slides \& code available at: github.com/pzivich/Presentations\\~\\~\\
+	\faEnvelope \quad pzivich@unc.edu \qquad
+	\faTwitter \quad @PausalZ \qquad
+	\faGithub \quad pzivich\\
+\end{frame}
+
+\section{Appendix}
+
+\begin{frame}{Hajek IPW Estimator}
+	\centering 
+	\begin{center}
+		\setstretch{0.1}
+		\includegraphics[width=0.6\linewidth]{images/sandwich_top5.png}
+		\begin{empheq}[box=\bbox]{equation*}
+			\left(A_i - \text{expit}(g(W_i)^T \alpha)\right) g(W_i)
+		\end{empheq}
+		\begin{empheq}[box=\wbox]{equation*}
+			(Y_i - \mu_1) \frac{A_i}{\text{expit}(g(W_i)^T \alpha)}
+		\end{empheq}
+		\begin{empheq}[box=\wbox]{equation*}
+			(Y_i - \mu_0) \frac{(1-A_i)}{1-\text{expit}(g(W_i)^T \alpha)}
+		\end{empheq}
+		\begin{empheq}[box=\wbox]{equation*}
+			(\mu_1 - \mu_0) - \mu_2
+		\end{empheq}
+		\includegraphics[width=0.6\linewidth]{images/sandwich_bottom1.png}
+		\setstretch{1.0}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Augmented Inverse Probability Weighting}
+	The AIPW estimator is
+	\[\frac{1}{n} \sum_{i=1}^n \tilde{Y}_i^1 - \tilde{Y}_i^0\]
+	\[\tilde{Y}^a_i = \frac{Y_i I(A_i = a)}{\Pr(A_i = a | W_i; \hat{\alpha})} + \frac{E[Y_i | A_i=a,W_i; \hat{\beta}] ( ...)}{\Pr(A_i = a | W_i; \hat{\alpha})}\]
+	Estimating the variance for the RD
+	\begin{itemize}
+		\item Bootstrap
+		\item Outer product of influence functions
+		\item Sandwich
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Augmented Inverse Probability Weighting}
+	\begin{center}
+		\setstretch{0.1}
+		\includegraphics[width=0.6\linewidth]{images/sandwich_top1.png}
+		\begin{empheq}[box=\bbox]{equation*}
+			\left(A_i - \text{expit}(g(W_i)^T \hat{\alpha})\right) g(W_i)
+		\end{empheq}
+		\begin{empheq}[box=\rbox]{equation*}
+			\left(Y_i - \text{expit}(g(A_i, W_i)^T \hat{\beta})\right) g(A_i, W_i)
+		\end{empheq}
+		\begin{empheq}[box=\wbox]{equation*}
+			\tilde{Y}_i^1 - \hat{\mu}_1
+		\end{empheq}
+		\begin{empheq}[box=\wbox]{equation*}
+			\tilde{Y}_i^0 - \hat{\mu}_0
+		\end{empheq}
+		\begin{empheq}[box=\wbox]{equation*}
+			(\hat{\mu}_1 - \hat{\mu}_0) - \hat{\mu}_2
+		\end{empheq}
+		\includegraphics[width=0.6\linewidth]{images/sandwich_bottom3.png}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Results}
+	\begin{center}
+		\includegraphics[width=1.0\linewidth]{images/causal4.png}
+	\end{center}
+\end{frame}
+
+\end{document}

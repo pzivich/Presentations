@@ -39,6 +39,13 @@ Clinical Biostatistics. August 21-25, 2022. Newcastle upon Tyne, UK
 
 ----------
 
+`LSHTM_M-estimation`
+
+Zivich PN. (2022) "M-estimation". Centre for Statistical Methodology Seminar at London School of Hygiene and Tropical
+Medicine. October 5, 2022. Virtual
+
+----------
+
 `SER-2022`
 
 Zivich PN. (2022) "M-estimation for fusion designs". Oral Presentation at the 55th annual Society for Epidemiologic
