@@ -32,6 +32,14 @@ Institute for Clinical Sciences. March 16-18, 2021. Virtual.
 
 ----------
 
+`ICERM-2023`
+
+Zivich PN. (2023) "Extending Inferences to a Target Population Without Positivity". Oral Presentation at Extending 
+Inferences to a New Target Population hosted by The Institute for Computational and Experimental Research in Mathematics 
+(ICERM) at Brown University. November 17-19, 2023. Providence, RI.
+
+----------
+
 `ISCB43`
 
 Zivich PN. (2022) "Why I use Python". Oral Presentation at the 43rd Annual Conference of the International Society for

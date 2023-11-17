@@ -1,0 +1,616 @@
+\documentclass{beamer}
+\usetheme{Copenhagen}
+\usecolortheme{whale}
+\usefonttheme[onlymath]{serif}
+
+\usepackage{setspace}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{multimedia}
+\usepackage{fontawesome5}
+\usepackage[most]{tcolorbox}
+\usepackage{empheq}
+\usepackage{fancybox}
+\usepackage{annotate-equations}
+\usepackage{tikz}
+\usetikzlibrary{positioning, calc, shapes.geometric, shapes.multipart, 
+	shapes, arrows.meta, arrows, 
+	decorations.markings, external, trees}
+\tikzstyle{Arrow} = [
+thick, 
+decoration={
+	markings,
+	mark=at position 1 with {
+		\arrow[thick]{latex}
+	}
+}, 
+shorten >= 3pt, preaction = {decorate}
+]
+
+\title[Synthesis Modeling for Non-Positivity]{Extending Inferences to a Target Population Without Positivity}
+\author[PN Zivich]{Paul Zivich, PhD \\~\\ Assistant Professor \\ Department of Epidemiology \\ University of North Carolina at Chapel Hill}
+
+% o draw inferences from a sample to the target population, where the sample is not a random sample of the target population, various generalizability and transportability methods can be considered. Many of these modern approaches rely on a structural positivity assumption, such that all relevant covariate patterns in the target population are also observed in the secondary population of which the data is random sample of. Strict eligibility criteria, particularly in the context of randomized trials, may lead to violations of this positivity assumption. To address this concern, common methods are to restrict the target population, restrict the adjustment set, or extrapolate from a statistical model. Instead of these approaches, which all have concerning limitations, we propose a synthesis, or combination, of statistical (e.g., g-methods) and mathematical (e.g., microsimulation, mechanistic) models. Briefly, a statistical model is fit for the regions of the parameter space where positivity holds, and a mathematical model is used to fill-in, or impute, the nonpositive regions. For estimation, we propose two augmented inverse probability weighting estimators; one based on estimating the parameters of a marginal structural model, and the other based on estimating the conditional average causal effect. The standard approaches and the proposed synthesis method are illustrated with a simulation study and an applied example on the effect of antiretroviral therapy on CD4 cell count. The proposed synthesis method sheds light on a way to address challenges associated with the positivity assumption for transporting and causal inference more generally.
+
+\setbeamercovered{transparent}
+\setbeamertemplate{navigation symbols}{}  % gets rid of the dumb navigation symbols
+\setbeamertemplate{page number in head/foot}{\insertframenumber}  % adds slide #
+\setbeamertemplate{headline}{}
+
+\AtBeginSection[]{
+	\begin{frame}
+		\vfill
+		\centering
+		\begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+			\usebeamerfont{title}\insertsectionhead\par%
+		\end{beamercolorbox}
+		\vfill
+	\end{frame}
+}
+
+\begin{document}
+	
+\begin{frame}[plain]
+	\centering
+	\maketitle
+\end{frame}
+
+\begin{frame}{Corresponding Publications}
+	Zivich PN, Edwards JK, Lofgren ET, Cole SR, Shook-Sa BE, Lessler J. Transportability without positivity: a synthesis of statistical and simulation modeling. \textit{Epidemiology} In-press 2023. 
+	\\~\\~\\
+	Zivich PN, Edwards JK, Shook-Sa BE, Lofgren ET, Lessler J, Cole SR. Synthesis estimators for positivity violations with a continuous covariate. \textit{arXiv}:2311.09388 
+\end{frame}
+
+\begin{frame}{Acknowledgements}
+	\begin{center}
+		\includegraphics[width=0.99\linewidth]{images/coauthors.png}	
+	\end{center}
+	{\small
+		\textbf{Funding}: K01AI125087, R01AI157758, R01GM140564, P30AI050410 \\
+		\textbf{Disclaimer}: content is responsibility of the authors and does not necessarily represent the official views of the National Institutes of Health.\\~\\
+	}
+	\begin{center}
+		\faEnvelope \quad pzivich@unc.edu \quad 
+		\faGithub \quad pzivich \quad 
+		\faMastodon \quad PausalZ@fediscience.org
+	\end{center}	
+\end{frame}
+
+\begin{frame}{Motivating problem\footnote[frame]{Inspired by the example in Dahabreh et al. (2023) \textit{Stats in Med}}}
+	Teleporting to 1995, a colleague asks for help addressing a question
+	\begin{itemize}
+		\item \textbf{Question}: should women with HIV be treated with two-drug or one-drug antiretroviral therapy (ART)?
+		\item \textbf{Parameter}: average causal effect of two-drug versus one-drug ART on 20-week CD4 T cell count (cells/mm\textsuperscript{3})
+	\end{itemize}
+	~\\
+	Two sources of data to answer this question
+	\begin{itemize}
+		\item AIDS Clinical Trial Group (ACTG) 175
+		\begin{itemize}
+			\item Trial comparing two-drug versus one-drug ART
+		\end{itemize}
+		\item Women's Interagency HIV Study (WIHS)
+		\begin{itemize}
+			\item Assumed to be a random sample of the target population
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Notation}
+	$Y^a$: potential outcome under action $a$ \\~\\
+	$Y$: outcome of interest, CD4 at 20 weeks \\
+	$A$: action, two-drug ($A=1$) or one-drug ($A=0$) ART \\
+	$V$: continuous covariate, baseline CD4 \\
+	$W$: set of additional covariates
+	\begin{itemize}
+		\item Age, race, weight
+	\end{itemize}
+	$R$: indicator for target population ($R=1$) or trial ($R=0$) 
+	$O = (R,W,V,(1-R)A, (1-R)Y)$
+	\\~\\
+	Average causal effect (ACE)
+	\[\psi = E[Y^1 - Y^0 \mid R=1]\]
+\end{frame}
+
+%\begin{frame}{Data structure}
+%	\centering
+%	\includegraphics[width=0.7\linewidth]{images/data_structure_generic.png}
+%\end{frame}
+
+\begin{frame}{Identification Assumptions}
+	\[E[Y^a | R=1] = E\left\{E[Y|A=a,V,W,R=0] \mid R=1 \right\}\]
+	\begin{block}{Causal consistency}
+		\begin{equation*}
+			Y_i = Y_i^a \text{ if } a=A_i
+		\end{equation*}
+	\end{block}
+	\begin{block}{Action (in trial population)}
+		\begin{equation*}
+			Y^a \amalg A \mid V,W,R=0
+		\end{equation*}
+		\begin{equation*}
+			\Pr(A = a \mid V=v,W=w,R=0) > 0 \; \forall \; f(v,w,R=0) > 0
+		\end{equation*}
+	\end{block}	
+	\begin{block}{Sampling (linking between populations)}
+		\begin{equation*}
+			Y^a \amalg R \mid V,W
+		\end{equation*}
+		\begin{equation*}
+			\Pr(R=0 \mid V=v, W=w) > 0 \; \forall \; f(v,w,R=1) > 0
+		\end{equation*}
+	\end{block}	
+\end{frame}
+
+\begin{frame}{Identification Assumptions}
+	\begin{block}{Causal consistency}
+		\begin{equation*}
+			Y_i = Y_i^a \text{ if } a=A_i
+		\end{equation*}
+	\end{block}
+	\begin{block}{Action (in trial population)}
+		\begin{equation*}
+			Y^a \amalg A \mid V,W,R=0
+		\end{equation*}
+		\begin{equation*}
+			\Pr(A = a \mid V=v,W=w,R=0) > 0 \; \forall \; f(v,w,R=0) > 0
+		\end{equation*}
+	\end{block}	
+	\begin{block}{Sampling (linking between populations)}
+		\begin{equation*}
+			Y^a \amalg R \mid V,W
+		\end{equation*}
+		\begin{center}
+		\colorbox{yellow!25}{
+			$\Pr(R=0 \mid V=v, W=w) > 0 \; \forall \; f(v,w,R=1) > 0$
+		}
+		\end{center}
+	\end{block}	
+\end{frame}
+
+\begin{frame}{A problem with positivity}
+	\centering
+	\includegraphics[width=0.95\linewidth]{images/figure_density_icerm.png}
+\end{frame}
+
+\begin{frame}{Common solutions to non-positivity}
+	\begin{enumerate}
+		\item[1.] Restrict the covariate set
+		\item[2.] Restrict the target population
+		\item[3.] Extrapolation
+	\end{enumerate}
+\end{frame}
+
+% \section{Restricting the covariate set}
+
+\begin{frame}{1. Restrict the covariate set}
+	Keep parameter of interest, $\psi$, but modify the adjustment set
+	\\~\\
+	\begin{block}{Sampling}
+		\begin{equation*}
+			Y^a \amalg R \mid \eqnmarkbox[red]{node1}{W}
+		\end{equation*}
+		\annotate[yshift=-0.2em]{below,left}{node1}{Limit exchangeability to $W$}
+		~\\
+		\begin{equation*}
+			\Pr(R=0 \mid W=w) > 0 \; \forall \; 
+			\eqnmarkbox[blue]{node2}{f(w,R=1)}
+			> 0
+		\end{equation*}
+		\annotate[yshift=-0.2em]{below,left}{node2}{No longer consider $V$}	
+	\end{block}	
+\end{frame}
+
+%\begin{frame}{Some issues}
+%	Seems like an arbitrary decision based on convenience
+%	\begin{itemize}
+%		\item Originally included $V$, so likely important
+%		\begin{itemize}
+%			\item CD4 is predictive of later CD4
+%		\end{itemize}
+%		\item Exclusion can result in systematic error
+%		\begin{itemize}
+%			\item Answer may be misleading
+%		\end{itemize}
+%	\end{itemize}
+%\end{frame}
+
+%\section{Restricting the target population}
+
+\begin{frame}{2. Restrict the target population}
+	Modify the parameter of interest
+	\[\psi_0 = E[Y^1 - Y^0  \mid V^*=0, R=1]\]
+	where $V^*=1 - I(v_1 \le V \le v_2)$
+	~\\
+	\begin{block}{Sampling}
+		\begin{equation*}
+			Y^a \amalg R \mid V,W, \eqnmarkbox[red]{node1}{V^* = 0}
+		\end{equation*}
+		\annotate[yshift=-0.5em]{below,left}{node1}{Restricting to positive region}
+		\begin{equation*}
+			\Pr(R=0 \mid V=v, W=w) > 0 \; \forall \; f(v,w,R=1,
+			\eqnmarkbox[blue]{node2}{V^*=0}
+			) > 0
+		\end{equation*}
+		\annotate[yshift=-0.5em]{below,left}{node2}{Positivity for subset}	
+	\end{block}	
+\end{frame}
+
+%\begin{frame}{Some issues}
+%	Methodologically rigorous
+%	\begin{itemize}
+%		\item At the cost of changing the question
+%	\end{itemize}~\\
+%	Why one might want to avoid this
+%	\begin{itemize}
+%		\item In public health decision must be made
+%		\item Avoiding the question ...
+%	\end{itemize}
+%\end{frame}
+
+%\section{Extrapolation}
+
+\begin{frame}{3. Extrapolation}
+	Abandon \textit{nonparametric} identification in favor of \textit{parametric}
+	\begin{itemize}
+		\item Use a parametric outcome model to extrapolate
+		\item Requires parametric model to be valid over non-positive regions
+	\end{itemize}
+	~\\
+	%Often used to address \textit{random} positivity violations\footnote[frame]{See Zivich, Cole \& Westreich \textit{arXiv:2207.05010} for more}
+	%\begin{itemize}
+	%	\item For \textit{deterministic} positivity violations
+	%	\begin{itemize}
+	%		\item Assume the model for extrapolation is correctly specified across nonpositive regions
+	%		\item Cannot be checked given data 
+	%	\end{itemize}
+	%\end{itemize}
+\end{frame}
+
+\section{Synthesis of statistical and mathematical models}
+
+\begin{frame}{Synthesis of statistical and mathematical models}
+	A re-expression of $\psi$ following law of total expectation\\~\\~\\
+	\begin{equation*}
+		\psi = 
+		\eqnmarkbox[blue]{node1}{\psi_0}
+		\Pr(V^{*}=0 \mid R=1)
+		+ 
+		\eqnmarkbox[red]{node2}{\psi_1}
+		\Pr(V^{*}=1 \mid R=1)
+	\end{equation*}
+	\annotate[yshift=1.5em]{above,right}{node1}{$E[Y^1 - Y^0 \mid V^*=0, R=1]$}	
+	\annotate[yshift=-1em]{below,left}{node2}{$E[Y^1 - Y^0 \mid V^*=1, R=1]$}	
+	~\\~\\~\\
+	\textbf{Underlying idea}: fit a statistical model for {\color{blue} the regions with positivity}, use a mathematical model to fill-in (impute) over {\color{red} the nonpositive region}
+	%Statistical model for $\eqnmark[blue]{node9}{\psi_0}$ 
+	%\begin{itemize}
+	%	\item Estimate using observed data
+	%\end{itemize}
+	%Mathematical model for $\eqnmark[red]{node8}{\psi_1}$		
+	%\begin{itemize}
+	%	\item Build using external information
+	%\end{itemize}
+\end{frame}
+
+\begin{frame}{One way to combine models\footnote[frame]{Other ways are considered in the \textit{Epidemiology} and \textit{arXiv} papers}}
+	Model for conditional average causal effect (CACE) \\~\\~\\
+	\begin{equation*}
+		\begin{aligned}
+			E[Y^1-Y^0 |V,R=1] & = 
+			\eqnmarkbox[blue]{node1}{\gamma_0 + \gamma_1 V}
+			+ 
+			\eqnmarkbox[red]{node2}{V^* \left\{\delta_1 V + \delta_2 V^2 \right\}} \\
+			& = 
+			\eqnmarkbox[blue]{node3}{s(O_i; \gamma)}
+			+ 
+			\eqnmarkbox[red]{node4}{m(O_i; \delta)}
+		\end{aligned}
+	\end{equation*}
+	\annotate[yshift=1.5em]{above,left}{node1}{Estimable with data}	
+	\annotate[yshift=1.5em]{above,right}{node2}{Inestimable}	
+	\annotate[yshift=-.5em]{below,left}{node3}{Statistical model contribution}	
+	\annotate[yshift=-2em]{below,left}{node4}{Mathematical model contribution}	
+\end{frame}
+
+\begin{frame}{A visualization of a synthesis CACE}
+	\centering
+	\includegraphics[width=0.95\linewidth]{images/figure1.png}
+\end{frame}
+
+\begin{frame}{Mathematical model}
+	What do I mean by mathematical model\footnote[frame]{See Roberts et al. (2012) \textit{Med Decis Making} for general overview for constructing mathematical models}
+	\begin{itemize}
+		\item Mechanistic models
+		\item Microsimulation
+		\item Agent-based models
+	\end{itemize}
+	~\\
+	Informed by external information
+	\begin{itemize}
+		\item Studies on exposures or treatments with similar mechanisms of action, pharmacokinetic studies, animal models
+		\item Mathematical model synthesizes this information
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Synthesis AIPW Estimator}
+	Estimator based on CACE model
+	\[\hat{\psi}_{CACE} =  \frac{1}{\sum_{i=1}^{n} I(R_i = 1)} \sum_{i=1}^{n} \eqnmark[violet]{nodeA}{\mathcal{G}(O_i; \hat{\gamma}, \hat{\eta}, \delta)} I(R_i =1)\]
+	where 
+	\[E[Y^1-Y^0 \mid V,R=1] = \eqnmark[violet]{nodeB}{\mathcal{G}(O_i;\gamma, \eta, \delta)} = \eqnmark[blue]{nodeC}{s(O_i; \gamma, \eta)} + \eqnmark[red]{nodeD}{m(O_i; \delta)}\]
+	~\\
+	Augmented inverse probability weighting (AIPW) estimator\footnote[frame]{Zivich et al. (2023) \textit{Epidemiology} provides g-computation and inverse probability weighting estimators}
+	\begin{itemize}
+		\item Weighted regression AIPW\footnote[frame]{Robins et al. (2007) \textit{Statistical Science}}
+	\end{itemize}	
+\end{frame}
+
+\begin{frame}{Synthesis AIPW estimator}
+	\centering
+	\includegraphics[width=0.99\linewidth]{images/aipw_s0.png}
+\end{frame}
+
+\begin{frame}{Synthesis AIPW estimator}
+	\centering
+	\includegraphics[width=0.99\linewidth]{images/aipw_s1.png}
+\end{frame}
+
+\begin{frame}{Synthesis AIPW estimator}
+	\centering
+	\includegraphics[width=0.99\linewidth]{images/aipw_s2.png}
+\end{frame}
+
+\begin{frame}{Synthesis AIPW estimator}
+	\centering
+	\includegraphics[width=0.99\linewidth]{images/aipw_s3.png}
+\end{frame}
+
+\begin{frame}{Synthesis AIPW estimator}
+	\centering
+	\includegraphics[width=0.99\linewidth]{images/aipw_s4.png}
+\end{frame}
+
+\begin{frame}{Synthesis AIPW estimator}
+	\centering
+	\includegraphics[width=0.99\linewidth]{images/aipw_s5.png}
+\end{frame}
+
+\begin{frame}{Synthesis AIPW estimator}
+	\centering
+	\includegraphics[width=0.99\linewidth]{images/aipw_s6.png}
+\end{frame}
+
+\begin{frame}{Uncertainty of the Mathematical Model}
+	Ignored uncertainty in $\delta$
+	\\~\\
+	Two options
+	\begin{itemize}
+		\item[1.] Range of plausible values for $\delta$ \footnote[frame]{See Vansteelandt et al. (2006) \textit{Statistica Sinica}}
+		\begin{itemize}
+			\item Bounds on $\psi$
+		\end{itemize}
+		\item[2.] Distribution of plausible values for $\delta$
+		\begin{itemize}
+			\item Monte Carlo procedure
+			\item Distribution for $\psi$
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\section{Application}
+
+\begin{frame}{Description of available data}
+	\begin{table}
+		\centering
+		\begin{tabular}{lcc} 
+			\hline
+			& ACTG 175 ($n_0 = 276$) & WIHS ($n_1 = 1932$)  \\ 
+			\cline{2-3}
+			Age                     & 33 [28, 39]               & 36 [31,41]              \\
+			Baseline CD4 & 350 [278, 443]            & 330 [161, 516]          \\
+			Weight (kg)             & 67 [59, 76]               & 66 [58, 78]             \\
+			White                   				       & 154 (56\%)                & 390 (20\%)              \\
+			Two-drug ART          					& 175 (64\%)                & -                       \\
+			CD4 20 weeks                & 357 [267, 480]            & -                       \\
+			\hline
+		\end{tabular}
+	\end{table}
+	~\\
+	Brackets are 25\textsuperscript{th} and 75\textsuperscript{th} percentiles
+\end{frame}
+
+\begin{frame}{A reminder of the problem}
+	\centering
+	\includegraphics[width=0.95\linewidth]{images/figure_density_icerm.png}
+\end{frame}
+
+\begin{frame}{Parameter re-expression}
+	Separating parameter into regions
+	\begin{equation*}
+		\begin{split}
+			\psi = & \eqnmark[red]{node1}{\psi_l} \Pr(V < 124 | R = 1) \\
+			& + \eqnmark[blue]{node2}{\psi_m}  \Pr(124 \le V \le 771 | R=1) \\
+			& + \eqnmark[red]{node3}{\psi_u}  \Pr(V>771 | R=1)
+		\end{split}
+	\end{equation*}
+	Synthesis model for all regions
+	\begin{equation*}
+		\begin{split}
+			\mathcal{G}(O_i;\gamma, \eta, \delta) = & \eqnmark[red]{node1}{\delta_1} I(V_i < 124) \\
+			& + \eqnmark[blue]{node2}{s(O_i; \gamma, \eta)} I(124 \le V_i \le 771) \\
+			& + \eqnmark[red]{node3}{\delta_2} I(V_i > 771)
+		\end{split}
+	\end{equation*}
+\end{frame}
+
+\begin{frame}{Mathematical model}
+	Contemporaneous information from pharmacokinetic studies\footnote[frame]{Wilde \& Langtry \textit{Drugs} (1993)}
+	\begin{itemize}
+		\item Lower bound\footnote[frame]{Meng et al. \textit{Ann Intern Med} (1992)}
+		\begin{itemize}
+			\item Don't expect two-drug to result in lower CD4 compared to one-drug
+			\item Lowest CACE would be in nonpositive regions is zero
+			\item $\delta_1 = \delta_2 = -20$
+			\item Mild antagonistic interaction between drugs
+		\end{itemize}
+		\item Upper bound
+		\begin{itemize}
+			\item $\delta_1 = 150$ based on largest increases observed in small-scale studies\footnote[frame]{Collier et al. (1993) \textit{Ann Intern Med}}
+			\item $\delta_2 = 100$ since no studies available (less stark but still beneficial)
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Statistical model}
+	Conditional Average Causal Effect
+	\begin{itemize}
+		\item Weighted regression AIPW
+	\end{itemize}
+	~\\~\\
+	Functional forms
+	\begin{itemize}
+		\item Restricted quadratic splines (age, weight, baseline CD4)
+		\begin{itemize}
+			\item All models
+		\end{itemize}
+		\item Baseline CD4 \& ART interaction terms
+		\begin{itemize}
+			\item Outcome model
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Estimated CACE}
+	\centering
+	\includegraphics[width=0.99\linewidth]{images/figure_cace_icerm.png}
+\end{frame}
+
+\begin{frame}{Results}
+	\begin{center}
+		\includegraphics[width=0.99\linewidth]{images/forest_plot.png}
+	\end{center}
+	\small 
+	Difference in CD4 at 20-weeks comparing two-drug to one-drug ART (higher is better)
+\end{frame}
+
+\begin{frame}{Conclusions}
+	Extension of inferences between populations without positivity
+	\begin{itemize}
+		\item Integrate external information sources
+		\item Advantages over existing approaches
+	\end{itemize}
+	~\\
+	Future areas for work
+	\begin{itemize}
+		\item Other uses of statistical and mathematical models
+		\begin{itemize}
+			\item Exchangeability paired with positivity
+		\end{itemize}
+		\item Alternative estimators
+		\item Make mathematical models more robust and reliable
+		\begin{itemize}
+			\item Sensitivity analyses, diagnostics
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Thanks!}
+	Zivich PN, Edwards JK, Lofgren ET, Cole SR, Shook-Sa BE, Lessler J. Transportability without positivity: a synthesis of statistical and simulation modeling. \textit{Epidemiology} In-press 2023. \\~\\
+	Zivich PN, Edwards JK, Shook-Sa BE, Lofgren ET, Lessler J, Cole SR. Synthesis estimators for positivity violations with a continuous covariate. \textit{arXiv}:2311.09388
+	\\~\\~\\
+	\begin{center}
+		\faEnvelope \quad pzivich@unc.edu \quad 
+		\faGithub \quad pzivich \quad 
+		\faMastodon \quad PausalZ@fediscience.org
+	\end{center}	
+\end{frame}
+
+\section{Appendix}
+
+\begin{frame}{A synthesis AIPW estimator\footnote[frame]{Estimating equations are solved using \texttt{delicatessen}, arXiv:2203.11300}}
+	Weighted regression AIPW as estimating equations
+	\begin{equation*}
+		\sum_{i=1}^{n}
+		\begin{bmatrix}
+			(1 - R_i) \left[A_i - \text{expit}(\mathbb{Z}_i \hat{\eta}_1^T)\right] \mathbb{Z}_i^T \\
+			\eqnmark[darkgray]{ee2}{(1 - V^*_i) \left[R_i - \text{expit}(\mathbb{U}_i \hat{\eta}_2^T)\right] \mathbb{U}_i^T} \\
+			\eqnmark[violet]{ee3}{(1 - R_i) \pi(V_i, W_i; \hat{\eta}_1, \hat{\eta}_2) \left[Y_i - \mathbb{X}_i \hat{\eta}_3^T\right] \mathbb{X}_i^T} \\
+			\eqnmark[blue]{ee4}{R_i (1 - V_i^*) \left[ (\hat{Y}_i^1 - \hat{Y}_i^0) - \mathbb{V}_i \hat{\gamma}^T \right] \mathbb{V}_i^T} \\
+			(\eqnmark[blue]{ee51}{\mathbb{V}_i \hat{\gamma}^T} + \eqnmark[red]{ee52}{\mathbb{V}_i^* \delta^T}) - \hat{\psi}
+		\end{bmatrix} = 0
+	\end{equation*}
+	\begin{itemize}
+		\item $\mathbb{Z}, \mathbb{U}, \mathbb{X}, \mathbb{V}, \mathbb{V}^*$ are design matrices
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Simulations}
+	\[V \sim 375 \times \text{Weibull}(1, 1.5)\]
+	\[W \sim \text{Bernoulli}(0.2)\]
+	\[\Pr(R=0 | V,W) = 
+	\begin{cases}
+		\text{expit}(-0.02 V+ 2W) & V \le 300 \\
+		0                         & V > 300
+	\end{cases}\]
+	\[\Pr(A=1 | R=0) = 0.5\]
+	Sample sizes
+	\begin{itemize}
+		\item $n_1 = 1000, n_0 = 500$
+		\item $n_1 = 1000, n_0 = 1000$		
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Scenario 1: Setup}
+	\[Y^a = -20 + 70a + V + 0.12aV - 2W + 5aW + \epsilon\]
+	Relationship between $Y^a$ and $V$ doesn't change over $V^*$
+	\begin{itemize}
+		\item Extrapolation approach expected to be valid
+		\item Synthesis with valid parameters expected to be valid
+		\item Others are not
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Scenario 1: Results, $n_1 = 1000,n_0 = 500$}
+	\centering
+	\includegraphics[width=0.95\linewidth]{images/s1_n10n5.png}
+\end{frame}
+
+\begin{frame}{Scenario 1: Results, $n_1 = 1000,n_0 = 1000$}
+	\centering
+	\includegraphics[width=0.95\linewidth]{images/s1_n10n10.png}
+\end{frame}
+
+\begin{frame}{Scenario 2: Setup}
+	\begin{equation*}
+		\begin{split}
+			Y^a = & -20 + 70a + V + 0.12aV - 2W + 5aW \\
+			& - 0.2a \{V-300\} I(V>300) - 0.3a \{V-800\} I(V>800) \\
+			& + \epsilon
+		\end{split}
+	\end{equation*}
+	Relationship between $Y^a$ and $V$ changes in $V^* = 1$
+	\begin{itemize}
+		\item Synthesis with valid parameters expected to be valid
+		\item Others are not
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Scenario 2: Results, $n_1 = 1000,n_0 = 500$}
+	\centering
+	\includegraphics[width=0.95\linewidth]{images/s2_n10n5.png}
+\end{frame}
+
+\begin{frame}{Scenario 2: Results, $n_1 = 1000,n_0 = 1000$}
+	\centering
+	\includegraphics[width=0.95\linewidth]{images/s2_n10n10.png}
+\end{frame}
+
+\begin{frame}{Other results}
+	In the pre-print, other items considered
+	\begin{itemize}
+		\item Different mathematical model parameter specifications
+		\item Alternative estimator based on marginal structural models (MSMs)
+	\end{itemize}
+\end{frame}
+
+\end{document}
