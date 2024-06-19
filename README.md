@@ -73,3 +73,15 @@ the 56th annual Society for Epidemiologic Research (SER). June 13-16, 2023. Port
 
 Zivich PN. (2023) Co-chair of "Answering questions by combining data sources" at the 56th annual Society for 
 Epidemiologic Research (SER). June 13-16, 2023. Portland, OR, USA
+
+----------
+
+`SER-2024`
+
+Zivich PN (2024) ``Transportability Without Positivity: A Synthesis of Statistical and Simulation Modeling". 
+Lilienfeld Postdoctoral Prize Paper Award at the 57th annual Society for Epidemiologic Research (SER). 
+June 18-21, 2024. Austin, TX.
+
+Zivich PN (2024) ``Addressing nonpositivity using statistical and mathematical models". 
+Oral Presentation at the 57th annual Society for Epidemiologic Research (SER). 
+June 18-21, 2024. Austin, TX.
