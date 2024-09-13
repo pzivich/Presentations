@@ -54,7 +54,7 @@ Medicine. October 5, 2022. Virtual
 
 ----------
 
-`SER-2022`
+`SER`
 
 Zivich PN. (2022) "M-estimation for fusion designs". Oral Presentation at the 55th annual Society for Epidemiologic
 Research (SER). June 14-17, 2022. Chicago, IL, USA
@@ -63,20 +63,11 @@ Zivich PN. (2022) "Realistic policies on influenza vaccination and risk of subse
 students: application of targeted maximum likelihood estimation with interference". Oral Presentation at the 55th
 annual Society for Epidemiologic Research (SER). June 14-17, 2022. Chicago, IL, USA
 
-
-----------
-
-`SER-2023`
-
 Zivich PN. (2023) Co-chair of "Does Machine Learning Work?: Designing Better Simulation Studies for Inference" at
 the 56th annual Society for Epidemiologic Research (SER). June 13-16, 2023. Portland, OR, USA
 
 Zivich PN. (2023) Co-chair of "Answering questions by combining data sources" at the 56th annual Society for 
 Epidemiologic Research (SER). June 13-16, 2023. Portland, OR, USA
-
-----------
-
-`SER-2024`
 
 Zivich PN (2024) ``Transportability Without Positivity: A Synthesis of Statistical and Simulation Modeling". 
 Lilienfeld Postdoctoral Prize Paper Award at the 57th annual Society for Epidemiologic Research (SER). 

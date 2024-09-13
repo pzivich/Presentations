@@ -21,6 +21,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
+from time import time
 
 from delicatessen import MEstimator
 from delicatessen.estimating_equations import ee_regression, ee_aft_weibull
@@ -57,7 +58,8 @@ def psi_treat(theta):
 
 
 # Reading in data
-d = pd.read_csv("actg_data_formatted.csv", sep=",")      # See notes above for data availability
+d = pd.read_csv("C:/Users/zivic/Documents/Research/#PZivich/BridgedDesignIntro/data/actg_data_formatted.csv", sep=",")
+# d = pd.read_csv("actg_data_formatted.csv", sep=",")      # See notes above for data availability
 d = d.loc[(d['cd4'] >= 50) & (d['cd4'] <= 300)].copy()   # Restricting by CD4 counts
 
 # Setting up variables as NumPy arrays
@@ -151,13 +153,14 @@ def psi_diagnostic(theta):
 event_t = [0, ] + sorted(np.unique(d.loc[d['delta'] == 1, 't'])) + [np.max(d['t'])]
 brdg_est, brdg_lcl, brdg_ucl = [], [], []
 diag_est, diag_lcl, diag_ucl = [], [], []
-init_bridge = [0, 0, 0, 0, 0, 0, ]
+init_bridge = [0, 0, 0.1, 0.1, 0.1, 0.1, ]
+start = time()
 for t_index in event_t:
     init_vals = (init_bridge
                  + list(estr_c.theta)
                  + list(estr_a.theta)
                  + list(estr_s.theta))
-    estr = MEstimator(psi_diagnostic, init=init_vals)
+    estr = MEstimator(psi_diagnostic, init=init_vals, subset=[0, 1, 2, 3, 4, 5])
     estr.estimate(solver='hybr', maxiter=10000, tolerance=1e-7)
 
     # Storing the output
@@ -174,6 +177,7 @@ for t_index in event_t:
     # Using previous inits (for general faster run-times)
     init_bridge = list(estr.theta[:6])
 
+print("RUNTIME:", time() - start)
 
 # Generating 1-by-2 plot of the results
 f, ax = plt.subplots(1, 2, figsize=(6.75, 4.5))
@@ -221,5 +225,6 @@ ax[1].set_title("Interest Parameter")
 
 # Saving plot for slides
 plt.tight_layout()
-plt.savefig("../images/ex_a3_results.png", format='png', dpi=300)
-plt.close()
+# plt.savefig("../images/ex_a3_results.png", format='png', dpi=300)
+# plt.close()
+plt.show()
