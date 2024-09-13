@@ -18,6 +18,13 @@ Dimensionality. May 23-27, 2022. University of British Columbia - Okanagan, Kelo
 
 ----------
 
+`CIRG`
+
+Zivich PN. (2024) "What is Causal Inference?". Oral Presentation at the 144th meeting of the University of North 
+Carolina at Chapel Hill Causal Inference Research Group (CIRG). Sept 13, 2024. Chapel Hill, North Carolina, USA
+
+----------
+
 `Duke-SNaH-2022`
 
 Zivich PN. (2022) "Targeted Maximum Likelihood Estimation for Causal Inference with Network Data". Oral Presentation at
