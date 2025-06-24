@@ -10,19 +10,19 @@ Title, date, and location of presentations are presented below
 
 ----------
 
-`BIRS`
-
-Zivich PN. (2022) "Fusion to address systematic errors across data sources". Oral Presentation at the Emerging
-Challenges for Statistics and Data Sciences: Complex Data with Missingness, Measurement Errors, and High
-Dimensionality. May 23-27, 2022. University of British Columbia - Okanagan, Kelowna, British Columbia, CA.
-
-----------
-
 `ACIC`
 
 Zivich PN. (2025) "Estimating the risk of influenza under differing distributions of vaccination among 
 university students". Oral Presentation at the American Causal Inference Conference. May 14-16, 2025. 
 Detroit, Michigan, USA.
+
+----------
+
+`BIRS`
+
+Zivich PN. (2022) "Fusion to address systematic errors across data sources". Oral Presentation at the Emerging
+Challenges for Statistics and Data Sciences: Complex Data with Missingness, Measurement Errors, and High
+Dimensionality. May 23-27, 2022. University of British Columbia - Okanagan, Kelowna, British Columbia, CA.
 
 ----------
 
@@ -52,6 +52,14 @@ Institute for Clinical Sciences. March 16-18, 2021. Virtual.
 Zivich PN. (2023) "Extending Inferences to a Target Population Without Positivity". Oral Presentation at Extending 
 Inferences to a New Target Population hosted by The Institute for Computational and Experimental Research in Mathematics 
 (ICERM) at Brown University. November 17-19, 2023. Providence, RI.
+
+----------
+
+`ICSDS`
+
+Zivich PN. (2025) "Stabilizing Causal Estimates: Tackling Random Seed Dependence in Machine Learning". Oral 
+Presentation at the International Conference on Statistics and Data Science (ICSDS). June 23-25, 2025. 
+Vancouver, BC, Canada.
 
 ----------
 
