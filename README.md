@@ -77,6 +77,14 @@ Medicine. October 5, 2022. Virtual
 
 ----------
 
+`MathModelsIdentify`
+
+Zivich PN. (2026) "Assumptions, Information, and What We Learn from Different Models".
+- Rotating presentation on causal identification for mathematical models 
+- Variations presented at: Northwestern University (February 3, 2026), University of Illinois Chicago (February 5, 2026)
+
+----------
+
 `SER`
 
 Zivich PN. (2022) "M-estimation for fusion designs". Oral Presentation at the 55th annual Society for Epidemiologic
