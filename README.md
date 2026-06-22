@@ -13,8 +13,13 @@ Title, date, and location of presentations are presented below
 `ACIC`
 
 Zivich PN. (2025) "Estimating the risk of influenza under differing distributions of vaccination among 
-university students". Oral Presentation at the American Causal Inference Conference. May 14-16, 2025. 
+university students". 
+Oral Presentation at the American Causal Inference Conference. May 14-16, 2025. 
 Detroit, Michigan, USA.
+
+Zivich PN. (2025) "Synthesizing Statistical and Mathematical Models to Address Non-Positivity". 
+Oral Presentation at the American Causal Inference Conference. May 13-15, 2026. 
+Salt Lake City, Utah, USA.
 
 ----------
 
@@ -100,10 +105,26 @@ the 56th annual Society for Epidemiologic Research (SER). June 13-16, 2023. Port
 Zivich PN. (2023) Co-chair of "Answering questions by combining data sources" at the 56th annual Society for 
 Epidemiologic Research (SER). June 13-16, 2023. Portland, OR, USA
 
-Zivich PN (2024) ``Transportability Without Positivity: A Synthesis of Statistical and Simulation Modeling". 
+Zivich PN (2024) "Transportability Without Positivity: A Synthesis of Statistical and Simulation Modeling". 
 Lilienfeld Postdoctoral Prize Paper Award at the 57th annual Society for Epidemiologic Research (SER). 
 June 18-21, 2024. Austin, TX.
 
-Zivich PN (2024) ``Addressing nonpositivity using statistical and mathematical models". 
+Zivich PN (2024) "Addressing nonpositivity using statistical and mathematical models". 
 Oral Presentation at the 57th annual Society for Epidemiologic Research (SER). 
 June 18-21, 2024. Austin, TX.
+
+Zivich PN. (2025) "Using observational data to improve inference in randomized trials" 
+Oral Presentation at the Society for Epidemiologic Research (SER) annual meeting. June 10-13, 2025. 
+Boston, MA, USA.
+
+Zivich PN. (2025) "Filling in the Blanks: Addressing Positivity Violations with Mathematical Models" 
+Oral Presentation at the Society for Epidemiologic Research (SER) annual meeting. June 10-13, 2025. 
+Boston, MA, USA.
+
+Zivich PN. (2026) "Sensitivity analyses for positivity violations" 
+Oral Presentation at the Society for Epidemiologic Research (SER) annual meeting. June 24-26, 2026. 
+Phoenix, AZ, USA.
+
+Zivich PN. (2026) "Causal Parameters for Public Health Policy" 
+Oral Presentation at the Society for Epidemiologic Research (SER) annual meeting. June 24-26, 2026. 
+Phoenix, AZ, USA.
